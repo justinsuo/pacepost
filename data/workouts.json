@@ -1,0 +1,187 @@
+{
+  "workouts": [
+    {
+      "id": "morning-jolt",
+      "name": "Morning Jolt",
+      "kind": "hiit",
+      "activityKind": "run",
+      "duration_min": 12,
+      "description": "Quick wake-up HIIT — gets the heart rate up without leaving you wrecked.",
+      "color": "#f59e0b",
+      "steps": [
+        { "label": "Warm-up jog", "seconds": 120, "intensity": 1 },
+        { "label": "Sprint", "seconds": 30, "intensity": 5 },
+        { "label": "Recover", "seconds": 60, "intensity": 1 },
+        { "label": "Sprint", "seconds": 30, "intensity": 5 },
+        { "label": "Recover", "seconds": 60, "intensity": 1 },
+        { "label": "Sprint", "seconds": 30, "intensity": 5 },
+        { "label": "Recover", "seconds": 60, "intensity": 1 },
+        { "label": "Sprint", "seconds": 30, "intensity": 5 },
+        { "label": "Recover", "seconds": 60, "intensity": 1 },
+        { "label": "Sprint", "seconds": 30, "intensity": 5 },
+        { "label": "Cool-down jog", "seconds": 180, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "fartlek-30",
+      "name": "Fartlek 30",
+      "kind": "intervals",
+      "activityKind": "run",
+      "duration_min": 30,
+      "description": "30-min Swedish-style fartlek — playful pace changes, no lap counting.",
+      "color": "#10b981",
+      "steps": [
+        { "label": "Warm-up easy", "seconds": 300, "intensity": 1 },
+        { "label": "Fast (5/10)", "seconds": 90, "intensity": 4 },
+        { "label": "Easy", "seconds": 90, "intensity": 1 },
+        { "label": "Faster (7/10)", "seconds": 60, "intensity": 5 },
+        { "label": "Easy", "seconds": 120, "intensity": 1 },
+        { "label": "Tempo (6/10)", "seconds": 180, "intensity": 4 },
+        { "label": "Easy", "seconds": 90, "intensity": 1 },
+        { "label": "Sprint (9/10)", "seconds": 30, "intensity": 6 },
+        { "label": "Walk", "seconds": 60, "intensity": 0 },
+        { "label": "Sprint (9/10)", "seconds": 30, "intensity": 6 },
+        { "label": "Easy", "seconds": 120, "intensity": 1 },
+        { "label": "Tempo (6/10)", "seconds": 180, "intensity": 4 },
+        { "label": "Cool-down jog", "seconds": 240, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "track-400s",
+      "name": "Track 400s",
+      "kind": "intervals",
+      "activityKind": "run",
+      "duration_min": 28,
+      "description": "Six 400m repeats with 200m recovery jog. Builds VO2 max.",
+      "color": "#ef4444",
+      "steps": [
+        { "label": "Warm-up easy", "seconds": 600, "intensity": 1 },
+        { "label": "400m hard", "seconds": 100, "intensity": 6 },
+        { "label": "200m jog", "seconds": 90, "intensity": 1 },
+        { "label": "400m hard", "seconds": 100, "intensity": 6 },
+        { "label": "200m jog", "seconds": 90, "intensity": 1 },
+        { "label": "400m hard", "seconds": 100, "intensity": 6 },
+        { "label": "200m jog", "seconds": 90, "intensity": 1 },
+        { "label": "400m hard", "seconds": 100, "intensity": 6 },
+        { "label": "200m jog", "seconds": 90, "intensity": 1 },
+        { "label": "400m hard", "seconds": 100, "intensity": 6 },
+        { "label": "200m jog", "seconds": 90, "intensity": 1 },
+        { "label": "400m hard", "seconds": 100, "intensity": 6 },
+        { "label": "Cool-down jog", "seconds": 300, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "tabata",
+      "name": "Tabata",
+      "kind": "hiit",
+      "activityKind": "run",
+      "duration_min": 8,
+      "description": "Classic Tabata: 8 rounds of 20s sprint / 10s rest. Brutal but quick.",
+      "color": "#dc2626",
+      "steps": [
+        { "label": "Warm-up", "seconds": 120, "intensity": 1 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Rest", "seconds": 10, "intensity": 0 },
+        { "label": "Sprint", "seconds": 20, "intensity": 7 },
+        { "label": "Cool-down walk", "seconds": 120, "intensity": 0 }
+      ]
+    },
+    {
+      "id": "easy-recovery",
+      "name": "Easy Recovery",
+      "kind": "easy",
+      "activityKind": "run",
+      "duration_min": 25,
+      "description": "Conversational pace, no intervals. Active-recovery day after a hard session.",
+      "color": "#22c55e",
+      "steps": [
+        { "label": "Easy run", "seconds": 1500, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "long-run-coach",
+      "name": "Long Run (90 min)",
+      "kind": "long",
+      "activityKind": "run",
+      "duration_min": 90,
+      "description": "Steady 90-minute long run with mid-effort surges every 15 min to break up the boredom.",
+      "color": "#3b82f6",
+      "steps": [
+        { "label": "Warm-up jog", "seconds": 600, "intensity": 1 },
+        { "label": "Steady", "seconds": 600, "intensity": 2 },
+        { "label": "Surge", "seconds": 60, "intensity": 4 },
+        { "label": "Steady", "seconds": 540, "intensity": 2 },
+        { "label": "Surge", "seconds": 60, "intensity": 4 },
+        { "label": "Steady", "seconds": 540, "intensity": 2 },
+        { "label": "Surge", "seconds": 60, "intensity": 4 },
+        { "label": "Steady", "seconds": 540, "intensity": 2 },
+        { "label": "Surge", "seconds": 60, "intensity": 4 },
+        { "label": "Steady", "seconds": 540, "intensity": 2 },
+        { "label": "Surge", "seconds": 60, "intensity": 4 },
+        { "label": "Cool-down", "seconds": 540, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "bike-zone-2",
+      "name": "Bike Zone 2",
+      "kind": "easy",
+      "activityKind": "bike",
+      "duration_min": 60,
+      "description": "Steady aerobic ride. Conversational pace; build the engine.",
+      "color": "#a855f7",
+      "steps": [
+        { "label": "Spin up", "seconds": 300, "intensity": 1 },
+        { "label": "Zone 2 steady", "seconds": 3000, "intensity": 2 },
+        { "label": "Spin down", "seconds": 300, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "bike-sprints",
+      "name": "Bike Sprint Intervals",
+      "kind": "intervals",
+      "activityKind": "bike",
+      "duration_min": 35,
+      "description": "Six 60-second all-out sprints with 4-min recovery between. Watt-bomb workout.",
+      "color": "#7c3aed",
+      "steps": [
+        { "label": "Warm-up", "seconds": 600, "intensity": 1 },
+        { "label": "Sprint", "seconds": 60, "intensity": 7 },
+        { "label": "Recover", "seconds": 240, "intensity": 1 },
+        { "label": "Sprint", "seconds": 60, "intensity": 7 },
+        { "label": "Recover", "seconds": 240, "intensity": 1 },
+        { "label": "Sprint", "seconds": 60, "intensity": 7 },
+        { "label": "Recover", "seconds": 240, "intensity": 1 },
+        { "label": "Sprint", "seconds": 60, "intensity": 7 },
+        { "label": "Recover", "seconds": 240, "intensity": 1 },
+        { "label": "Sprint", "seconds": 60, "intensity": 7 },
+        { "label": "Recover", "seconds": 240, "intensity": 1 },
+        { "label": "Sprint", "seconds": 60, "intensity": 7 },
+        { "label": "Cool-down", "seconds": 240, "intensity": 1 }
+      ]
+    },
+    {
+      "id": "drive-cruise",
+      "name": "Sunday Cruise",
+      "kind": "cruise",
+      "activityKind": "drive",
+      "duration_min": 90,
+      "description": "Slow, scenic drive. No timer prompts — just turn on the recorder and enjoy.",
+      "color": "#06b6d4",
+      "steps": [
+        { "label": "Cruise", "seconds": 5400, "intensity": 1 }
+      ]
+    }
+  ]
+}

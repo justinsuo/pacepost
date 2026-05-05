@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>pacepost</title>
+  <meta name="description" content="Track runs, drives, and rides. Coached workouts, achievements, streaks." />
+  <meta name="theme-color" content="#0b1015" />
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Top status bar -->
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-logo">⚡</span>
+      <span class="brand-name">pacepost</span>
+    </div>
+    <div class="topbar-stats">
+      <div class="streak" id="streak-chip" title="Current daily streak">🔥 <span id="streak-value">0</span></div>
+      <button class="icon-btn" id="profile-btn" aria-label="Profile">👤</button>
+    </div>
+  </header>
+
+  <!-- View container — only one is visible at a time -->
+  <main id="views">
+    <!-- Home / dashboard -->
+    <section class="view view-home active" data-view="home">
+      <div class="hero" id="home-hero"></div>
+      <div class="section-row">
+        <h2 class="section-title">Today</h2>
+      </div>
+      <div id="home-suggestion" class="suggestion-card"></div>
+      <div class="section-row">
+        <h2 class="section-title">Recent</h2>
+        <button class="link-btn" data-go="history">See all →</button>
+      </div>
+      <div id="home-recent"></div>
+      <div class="section-row">
+        <h2 class="section-title">Achievements</h2>
+        <button class="link-btn" data-go="profile">All →</button>
+      </div>
+      <div id="home-badges" class="badge-row"></div>
+    </section>
+
+    <!-- Track / start an activity -->
+    <section class="view view-track" data-view="track">
+      <h1 class="page-title">Start an activity</h1>
+      <div class="kind-grid">
+        <button class="kind-card kind-run" data-start="run">
+          <div class="kind-icon">🏃</div>
+          <div class="kind-name">Run</div>
+        </button>
+        <button class="kind-card kind-drive" data-start="drive">
+          <div class="kind-icon">🏎️</div>
+          <div class="kind-name">Drive</div>
+        </button>
+        <button class="kind-card kind-bike" data-start="bike">
+          <div class="kind-icon">🚴</div>
+          <div class="kind-name">Bike</div>
+        </button>
+        <button class="kind-card kind-walk" data-start="walk">
+          <div class="kind-icon">🚶</div>
+          <div class="kind-name">Walk</div>
+        </button>
+      </div>
+      <h2 class="section-title">Coached workouts</h2>
+      <div id="workout-list"></div>
+    </section>
+
+    <!-- Browse recommended routes -->
+    <section class="view view-routes" data-view="routes">
+      <h1 class="page-title">Recommended routes</h1>
+      <div class="filter-row" id="routes-filter">
+        <button class="filter-chip active" data-route-kind="all">All</button>
+        <button class="filter-chip" data-route-kind="run">🏃 Run</button>
+        <button class="filter-chip" data-route-kind="drive">🏎️ Drive</button>
+        <button class="filter-chip" data-route-kind="bike">🚴 Bike</button>
+        <button class="filter-chip" data-route-kind="walk">🚶 Walk</button>
+      </div>
+      <div id="route-cards"></div>
+    </section>
+
+    <!-- History of all activities -->
+    <section class="view view-history" data-view="history">
+      <h1 class="page-title">History</h1>
+      <div class="filter-row" id="history-filter">
+        <button class="filter-chip active" data-hist-kind="all">All</button>
+        <button class="filter-chip" data-hist-kind="run">Run</button>
+        <button class="filter-chip" data-hist-kind="drive">Drive</button>
+        <button class="filter-chip" data-hist-kind="bike">Bike</button>
+        <button class="filter-chip" data-hist-kind="walk">Walk</button>
+      </div>
+      <div id="history-stats" class="history-stats"></div>
+      <div id="history-list"></div>
+      <div id="history-empty" class="empty-state" style="display:none;">
+        <div class="empty-icon">📭</div>
+        <div>No activities yet.</div>
+        <div style="margin-top:8px;font-size:13px;color:var(--text-dim);">Tap <strong>Track</strong> to log your first one.</div>
+      </div>
+    </section>
+
+    <!-- Profile / achievements / settings -->
+    <section class="view view-profile" data-view="profile">
+      <div class="profile-head">
+        <div class="profile-avatar" id="profile-avatar">👤</div>
+        <div>
+          <input type="text" id="profile-name" class="profile-name-input" placeholder="Your name" maxlength="40" />
+          <div class="profile-totals" id="profile-totals"></div>
+        </div>
+      </div>
+      <div class="section-row">
+        <h2 class="section-title">Goals</h2>
+      </div>
+      <div id="goals-grid" class="goals-grid"></div>
+      <div class="section-row">
+        <h2 class="section-title">Achievements</h2>
+        <span class="section-aside" id="badges-progress">0 / 0</span>
+      </div>
+      <div id="badges-grid" class="badges-grid"></div>
+      <div class="section-row">
+        <h2 class="section-title">PRs</h2>
+      </div>
+      <div id="prs-list"></div>
+      <div class="section-row">
+        <h2 class="section-title">Heatmap</h2>
+      </div>
+      <div id="heatmap" style="height:280px;border-radius:12px;overflow:hidden;border:1px solid var(--border);"></div>
+      <div class="profile-footer">
+        <button class="btn-ghost" id="export-btn">Export data (.json)</button>
+        <button class="btn-ghost" id="import-btn">Import data</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" />
+        <button class="btn-ghost danger" id="reset-btn">Reset everything</button>
+      </div>
+      <div class="profile-version">pacepost · v1.0</div>
+    </section>
+  </main>
+
+  <!-- Live tracker — full-screen overlay during an active session -->
+  <section class="live-overlay" id="live-overlay" aria-hidden="true">
+    <div class="live-header">
+      <button class="icon-btn" id="live-cancel" aria-label="Cancel">✕</button>
+      <div id="live-kind" class="live-kind">Run</div>
+      <button class="icon-btn" id="live-mute" title="Mute audio cues">🔊</button>
+    </div>
+
+    <div class="live-stats">
+      <div class="stat-big">
+        <div class="stat-label">Distance</div>
+        <div class="stat-val" id="live-distance">0.00 mi</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-cell">
+          <div class="stat-label">Time</div>
+          <div class="stat-val" id="live-time">00:00</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Pace</div>
+          <div class="stat-val" id="live-pace">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Speed</div>
+          <div class="stat-val" id="live-speed">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="coach-strip" id="coach-strip" style="display:none;">
+      <div class="coach-step-label" id="coach-step-label">—</div>
+      <div class="coach-step-time" id="coach-step-time">—</div>
+      <div class="coach-progress"><div class="coach-progress-fill" id="coach-progress-fill"></div></div>
+      <div class="coach-next" id="coach-next"></div>
+    </div>
+
+    <div id="live-map" class="live-map"></div>
+
+    <div class="live-controls">
+      <button class="ctrl-btn ctrl-pause" id="live-pause">Pause</button>
+      <button class="ctrl-btn ctrl-finish" id="live-finish">Finish</button>
+    </div>
+  </section>
+
+  <!-- Activity detail modal -->
+  <section class="modal-overlay" id="detail-overlay" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <button class="icon-btn" id="detail-close" aria-label="Close">✕</button>
+        <div id="detail-title"></div>
+        <button class="icon-btn" id="detail-delete" title="Delete">🗑️</button>
+      </div>
+      <div id="detail-body"></div>
+    </div>
+  </section>
+
+  <!-- Toast container -->
+  <div id="toasts"></div>
+
+  <!-- Bottom navigation -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-view="home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-btn" data-view="track"><span class="nav-icon">▶</span><span class="nav-label">Track</span></button>
+    <button class="nav-btn" data-view="routes"><span class="nav-icon">🗺</span><span class="nav-label">Routes</span></button>
+    <button class="nav-btn" data-view="history"><span class="nav-icon">📊</span><span class="nav-label">History</span></button>
+    <button class="nav-btn" data-view="profile"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></button>
+  </nav>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script src="db.js"></script>
+  <script src="tracker.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

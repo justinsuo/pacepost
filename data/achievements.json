@@ -1,0 +1,244 @@
+{
+  "achievements": [
+    {
+      "id": "first-steps",
+      "name": "First Steps",
+      "icon": "👟",
+      "description": "Log your first activity.",
+      "tier": "bronze",
+      "rule": { "type": "any-activity-count", "value": 1 }
+    },
+    {
+      "id": "first-run",
+      "name": "On the Run",
+      "icon": "🏃",
+      "description": "Complete your first run.",
+      "tier": "bronze",
+      "rule": { "type": "activity-count", "kind": "run", "value": 1 }
+    },
+    {
+      "id": "first-drive",
+      "name": "Engine On",
+      "icon": "🏎️",
+      "description": "Complete your first drive.",
+      "tier": "bronze",
+      "rule": { "type": "activity-count", "kind": "drive", "value": 1 }
+    },
+    {
+      "id": "first-ride",
+      "name": "Two Wheels",
+      "icon": "🚴",
+      "description": "Complete your first bike ride.",
+      "tier": "bronze",
+      "rule": { "type": "activity-count", "kind": "bike", "value": 1 }
+    },
+    {
+      "id": "first-walk",
+      "name": "Stretch the Legs",
+      "icon": "🚶",
+      "description": "Complete your first walk.",
+      "tier": "bronze",
+      "rule": { "type": "activity-count", "kind": "walk", "value": 1 }
+    },
+    {
+      "id": "early-bird",
+      "name": "Early Bird",
+      "icon": "🌅",
+      "description": "Start an activity before 7am.",
+      "tier": "silver",
+      "rule": { "type": "start-time-before", "hour": 7 }
+    },
+    {
+      "id": "night-owl",
+      "name": "Night Owl",
+      "icon": "🦉",
+      "description": "Start an activity after 9pm.",
+      "tier": "silver",
+      "rule": { "type": "start-time-after", "hour": 21 }
+    },
+    {
+      "id": "5k-club",
+      "name": "5K Club",
+      "icon": "🥉",
+      "description": "Run 5km in a single activity.",
+      "tier": "bronze",
+      "rule": { "type": "single-distance", "kind": "run", "km": 5 }
+    },
+    {
+      "id": "10k-club",
+      "name": "10K Club",
+      "icon": "🥈",
+      "description": "Run 10km in a single activity.",
+      "tier": "silver",
+      "rule": { "type": "single-distance", "kind": "run", "km": 10 }
+    },
+    {
+      "id": "half",
+      "name": "Half Marathon",
+      "icon": "🥇",
+      "description": "Run 21.1km in a single activity.",
+      "tier": "gold",
+      "rule": { "type": "single-distance", "kind": "run", "km": 21.1 }
+    },
+    {
+      "id": "full",
+      "name": "Marathon",
+      "icon": "🏆",
+      "description": "Run 42.2km in a single activity.",
+      "tier": "gold",
+      "rule": { "type": "single-distance", "kind": "run", "km": 42.2 }
+    },
+    {
+      "id": "streak-3",
+      "name": "On a Roll",
+      "icon": "🔥",
+      "description": "3-day streak (any activity).",
+      "tier": "bronze",
+      "rule": { "type": "streak", "value": 3 }
+    },
+    {
+      "id": "streak-7",
+      "name": "Week Warrior",
+      "icon": "🔥",
+      "description": "7-day streak.",
+      "tier": "silver",
+      "rule": { "type": "streak", "value": 7 }
+    },
+    {
+      "id": "streak-30",
+      "name": "Habitual",
+      "icon": "🔥",
+      "description": "30-day streak — that's a habit.",
+      "tier": "gold",
+      "rule": { "type": "streak", "value": 30 }
+    },
+    {
+      "id": "streak-100",
+      "name": "Iron Will",
+      "icon": "💎",
+      "description": "100-day streak. Unreal.",
+      "tier": "platinum",
+      "rule": { "type": "streak", "value": 100 }
+    },
+    {
+      "id": "five-o",
+      "name": "Five-O",
+      "icon": "🖐️",
+      "description": "5 activities in a single week.",
+      "tier": "silver",
+      "rule": { "type": "weekly-count", "value": 5 }
+    },
+    {
+      "id": "hill-climber",
+      "name": "Hill Climber",
+      "icon": "⛰️",
+      "description": "1,000ft of elevation gain in a single activity.",
+      "tier": "silver",
+      "rule": { "type": "single-elevation-ft", "value": 1000 }
+    },
+    {
+      "id": "everest",
+      "name": "Everester",
+      "icon": "🗻",
+      "description": "29,029ft of total cumulative climb.",
+      "tier": "gold",
+      "rule": { "type": "total-elevation-ft", "value": 29029 }
+    },
+    {
+      "id": "photo-trail",
+      "name": "Photo Trail",
+      "icon": "📷",
+      "description": "Add photos to 5 activities.",
+      "tier": "bronze",
+      "rule": { "type": "activities-with-photos", "value": 5 }
+    },
+    {
+      "id": "coachs-pet",
+      "name": "Coach's Pet",
+      "icon": "🎯",
+      "description": "Complete 5 coached workouts.",
+      "tier": "silver",
+      "rule": { "type": "coached-count", "value": 5 }
+    },
+    {
+      "id": "sprinter",
+      "name": "Sprinter",
+      "icon": "💨",
+      "description": "Run 1 mile under 8 minutes.",
+      "tier": "silver",
+      "rule": { "type": "pace-under", "kind": "run", "distanceMi": 1, "paceSecPerMi": 480 }
+    },
+    {
+      "id": "personal-best",
+      "name": "Personal Best",
+      "icon": "📈",
+      "description": "Beat your previous best on any distance.",
+      "tier": "bronze",
+      "rule": { "type": "pr-broken", "value": 1 }
+    },
+    {
+      "id": "multimodal",
+      "name": "Multimodal",
+      "icon": "🌀",
+      "description": "Run, drive, AND bike on the same day.",
+      "tier": "silver",
+      "rule": { "type": "multimodal-day", "value": 1 }
+    },
+    {
+      "id": "variety-pack",
+      "name": "Variety Pack",
+      "icon": "🎲",
+      "description": "Try every activity type at least once.",
+      "tier": "silver",
+      "rule": { "type": "all-kinds-tried" }
+    },
+    {
+      "id": "ranker",
+      "name": "The Critic",
+      "icon": "⭐",
+      "description": "Rank 10 routes (Beli style).",
+      "tier": "silver",
+      "rule": { "type": "ratings-given", "value": 10 }
+    },
+    {
+      "id": "century",
+      "name": "Century",
+      "icon": "💯",
+      "description": "100 total activities logged.",
+      "tier": "gold",
+      "rule": { "type": "any-activity-count", "value": 100 }
+    },
+    {
+      "id": "drive-touge",
+      "name": "Touge Driver",
+      "icon": "🛣️",
+      "description": "Drive a curated touge route.",
+      "tier": "silver",
+      "rule": { "type": "completed-route-tag", "tag": "touge" }
+    },
+    {
+      "id": "weekend-warrior",
+      "name": "Weekend Warrior",
+      "icon": "📅",
+      "description": "Activities on both Saturday and Sunday in the same weekend.",
+      "tier": "bronze",
+      "rule": { "type": "weekend-double" }
+    },
+    {
+      "id": "rainmaker",
+      "name": "Rainmaker",
+      "icon": "🌧️",
+      "description": "10 photos uploaded total.",
+      "tier": "bronze",
+      "rule": { "type": "total-photos", "value": 10 }
+    },
+    {
+      "id": "hiit-it",
+      "name": "HIIT It",
+      "icon": "⚡",
+      "description": "Complete a HIIT workout.",
+      "tier": "bronze",
+      "rule": { "type": "completed-coached-kind", "coachKind": "hiit" }
+    }
+  ]
+}
