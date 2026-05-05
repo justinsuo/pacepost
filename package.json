@@ -1,0 +1,25 @@
+{
+  "name": "pacepost",
+  "version": "1.0.0",
+  "description": "Fitness tracker PWA + Capacitor wrapper for iOS / Android.",
+  "private": true,
+  "scripts": {
+    "start": "python -m http.server 8766",
+    "cap:ios:add": "cap add ios",
+    "cap:ios:sync": "cap sync ios",
+    "cap:ios:open": "cap open ios",
+    "cap:android:add": "cap add android",
+    "cap:android:sync": "cap sync android",
+    "cap:android:open": "cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/geolocation": "^6.0.1",
+    "@capacitor/splash-screen": "^6.0.2"
+  }
+}

@@ -14,6 +14,10 @@
   --drive: #0891b2;
   --bike: #9333ea;
   --walk: #0d9488;
+  --hike: #65a30d;
+  --swim: #0284c7;
+  --strength: #db2777;
+  --yoga: #d97706;
   --gold: #d97706;
   --silver: #64748b;
   --bronze: #92400e;
@@ -191,6 +195,10 @@ img { max-width: 100%; }
 .act-icon.drive { background: rgba(8, 145, 178, 0.12); color: var(--drive); }
 .act-icon.bike { background: rgba(147, 51, 234, 0.12); color: var(--bike); }
 .act-icon.walk { background: rgba(13, 148, 136, 0.12); color: var(--walk); }
+.act-icon.hike { background: rgba(101, 163, 13, 0.12); color: var(--hike); }
+.act-icon.swim { background: rgba(2, 132, 199, 0.12); color: var(--swim); }
+.act-icon.strength { background: rgba(219, 39, 119, 0.12); color: var(--strength); }
+.act-icon.yoga { background: rgba(217, 119, 6, 0.12); color: var(--yoga); }
 .act-info { flex: 1; min-width: 0; }
 .act-title {
   font-weight: 700;
@@ -446,6 +454,80 @@ img { max-width: 100%; }
   margin-top: 2px;
 }
 .profile-totals strong { color: var(--text); font-weight: 700; }
+
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.profile-field {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.profile-field input {
+  width: 60px;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed var(--border-strong);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  padding: 2px 0;
+  text-transform: none;
+}
+.profile-field input:focus { border-bottom-color: var(--accent); }
+.profile-field > span:last-child { color: var(--text); font-size: 12px; font-weight: 600; }
+
+.effort-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.effort-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: grid;
+  place-items: center;
+}
+.effort-cell:hover { border-color: var(--accent); }
+.effort-cell.selected {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+.effort-cell[data-rpe="1"], .effort-cell[data-rpe="2"], .effort-cell[data-rpe="3"] { color: var(--run); }
+.effort-cell[data-rpe="4"], .effort-cell[data-rpe="5"], .effort-cell[data-rpe="6"] { color: var(--gold); }
+.effort-cell[data-rpe="7"], .effort-cell[data-rpe="8"], .effort-cell[data-rpe="9"], .effort-cell[data-rpe="10"] { color: #b91c1c; }
+.effort-cell.selected { color: #fff !important; }
+
+.builder-marker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
 
 .goals-grid {
   display: grid;

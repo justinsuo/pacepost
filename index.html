@@ -67,6 +67,22 @@
           <div class="kind-icon">🚶</div>
           <div class="kind-name">Walk</div>
         </button>
+        <button class="kind-card kind-hike" data-start="hike">
+          <div class="kind-icon">🥾</div>
+          <div class="kind-name">Hike</div>
+        </button>
+        <button class="kind-card kind-swim" data-start="swim">
+          <div class="kind-icon">🏊</div>
+          <div class="kind-name">Swim</div>
+        </button>
+        <button class="kind-card kind-strength" data-start="strength">
+          <div class="kind-icon">🏋️</div>
+          <div class="kind-name">Strength</div>
+        </button>
+        <button class="kind-card kind-yoga" data-start="yoga">
+          <div class="kind-icon">🧘</div>
+          <div class="kind-name">Yoga</div>
+        </button>
       </div>
       <h2 class="section-title">Coached workouts</h2>
       <div id="workout-list"></div>
@@ -81,6 +97,11 @@
         <button class="filter-chip" data-route-kind="drive">🏎️ Drive</button>
         <button class="filter-chip" data-route-kind="bike">🚴 Bike</button>
         <button class="filter-chip" data-route-kind="walk">🚶 Walk</button>
+        <button class="filter-chip" data-route-kind="hike">🥾 Hike</button>
+        <button class="filter-chip" data-route-kind="mine">⭐ Mine</button>
+      </div>
+      <div style="margin-bottom:14px;">
+        <button class="btn-primary" id="create-route-btn">+ Create my own route</button>
       </div>
       <div id="route-cards"></div>
     </section>
@@ -94,7 +115,12 @@
         <button class="filter-chip" data-hist-kind="drive">Drive</button>
         <button class="filter-chip" data-hist-kind="bike">Bike</button>
         <button class="filter-chip" data-hist-kind="walk">Walk</button>
+        <button class="filter-chip" data-hist-kind="hike">Hike</button>
+        <button class="filter-chip" data-hist-kind="swim">Swim</button>
+        <button class="filter-chip" data-hist-kind="strength">Strength</button>
+        <button class="filter-chip" data-hist-kind="yoga">Yoga</button>
       </div>
+      <input type="search" id="history-search" placeholder="Search by name or notes…" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font:13px system-ui;color:var(--text);outline:none;margin-bottom:14px;" />
       <div id="history-stats" class="history-stats"></div>
       <div id="history-list"></div>
       <div id="history-empty" class="empty-state" style="display:none;">
@@ -108,10 +134,21 @@
     <section class="view view-profile" data-view="profile">
       <div class="profile-head">
         <div class="profile-avatar" id="profile-avatar">👤</div>
-        <div>
+        <div style="flex:1;">
           <input type="text" id="profile-name" class="profile-name-input" placeholder="Your name" maxlength="40" />
           <div class="profile-totals" id="profile-totals"></div>
         </div>
+      </div>
+      <div class="profile-fields">
+        <label class="profile-field"><span>Weight</span>
+          <span><input type="number" id="profile-weight-lbs" min="50" max="500" step="1" placeholder="—" /> lbs</span>
+        </label>
+        <label class="profile-field"><span>Height</span>
+          <span><input type="number" id="profile-height-in" min="48" max="84" step="1" placeholder="—" /> in</span>
+        </label>
+        <label class="profile-field"><span>Age</span>
+          <span><input type="number" id="profile-age" min="10" max="100" step="1" placeholder="—" /></span>
+        </label>
       </div>
       <div class="section-row">
         <h2 class="section-title">Goals</h2>
@@ -201,6 +238,53 @@
         <button class="icon-btn" id="detail-delete" title="Delete">🗑️</button>
       </div>
       <div id="detail-body"></div>
+    </div>
+  </section>
+
+  <!-- Effort prompt — appears after finishing an activity -->
+  <section class="modal-overlay" id="effort-overlay" aria-hidden="true">
+    <div class="modal-card" style="max-width:420px;">
+      <div style="padding:20px 22px;">
+        <h3 style="margin:0 0 4px;font-size:18px;">How hard was that?</h3>
+        <p style="margin:0 0 14px;font-size:13px;color:var(--text-dim);">RPE — Rate of Perceived Exertion (1 = nothing, 10 = all-out).</p>
+        <div class="effort-grid" id="effort-grid"></div>
+        <div style="margin-top:6px;color:var(--text-dim);font-size:12px;" id="effort-hint">Tap a number — or skip.</div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn-ghost" id="effort-skip" style="flex:1;">Skip</button>
+          <button class="btn-primary" id="effort-save" style="flex:1;display:none;">Save</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Custom route builder -->
+  <section class="modal-overlay" id="builder-overlay" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <button class="icon-btn" id="builder-close" aria-label="Close">✕</button>
+        <div>Build a route</div>
+        <div style="width:36px;"></div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <input type="text" id="builder-name" placeholder="Route name" maxlength="60" style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font:13px system-ui;outline:none;" />
+          <select id="builder-kind" style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font:13px system-ui;">
+            <option value="run">🏃 Run</option>
+            <option value="bike">🚴 Bike</option>
+            <option value="walk">🚶 Walk</option>
+            <option value="hike">🥾 Hike</option>
+            <option value="drive">🏎️ Drive</option>
+          </select>
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Tap on the map to add a waypoint. Two or more = a route.</div>
+        <div id="builder-map" style="height:340px;border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px;"></div>
+        <div id="builder-stats" style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">0 waypoints · 0.00 mi</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-ghost" id="builder-undo" style="flex:1;">Undo last point</button>
+          <button class="btn-ghost danger" id="builder-clear" style="flex:1;">Clear</button>
+          <button class="btn-primary" id="builder-save" style="flex:2;">Save route</button>
+        </div>
+      </div>
     </div>
   </section>
 

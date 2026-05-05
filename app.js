@@ -14,7 +14,8 @@
   let activities = [];
   let unlockedBadges = new Set();
   let routeRatings = {};      // routeId → 1-5
-  let profile = { name: "", joinedAt: null, muteCoach: false };
+  let profile = { name: "", joinedAt: null, muteCoach: false, weightLbs: null, heightIn: null, age: null };
+  let personalRoutes = []; // user-created routes via the route builder
   let prs = {};               // distance-key → { activityId, time_sec, achievedAt }
   let tracker = null;
   let liveMap = null;
@@ -52,6 +53,7 @@
       await PaceDB.putMeta("profile", profile);
     }
     prs = (await PaceDB.getMeta("prs", {})) || {};
+    personalRoutes = (await PaceDB.getMeta("personalRoutes", [])) || [];
 
     wireNav();
     wireTopbar();
@@ -62,6 +64,7 @@
     wireLiveControls();
     wireDetailModal();
     wireInstallApp();
+    wireRouteBuilder();
 
     renderAll();
 
@@ -240,11 +243,128 @@
         renderRoutes();
       });
     });
+    document.getElementById("create-route-btn")?.addEventListener("click", openRouteBuilder);
+  }
+
+  // ─── Custom route builder ──────────────────────────────────
+  let builderMap = null;
+  let builderTrack = null;
+  let builderMarkers = [];
+  let builderWaypoints = [];
+  function openRouteBuilder() {
+    const overlay = document.getElementById("builder-overlay");
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    builderWaypoints = [];
+    document.getElementById("builder-name").value = "";
+    setTimeout(() => initBuilderMap(), 80);
+  }
+  function closeRouteBuilder() {
+    const overlay = document.getElementById("builder-overlay");
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    if (builderMap) { builderMap.remove(); builderMap = null; }
+    builderTrack = null;
+    builderMarkers = [];
+    builderWaypoints = [];
+  }
+  function initBuilderMap() {
+    if (builderMap) builderMap.remove();
+    builderMap = L.map("builder-map", { attributionControl: false }).setView([37.8, -122.2], 11);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(builderMap);
+    builderTrack = L.polyline([], { color: "#ea580c", weight: 4 }).addTo(builderMap);
+    builderMap.on("click", (e) => addBuilderWaypoint(e.latlng.lat, e.latlng.lng));
+    // Try to center on user's location for convenience
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        builderMap.setView([pos.coords.latitude, pos.coords.longitude], 14);
+      }, () => {}, { timeout: 4000 });
+    }
+    refreshBuilderUi();
+  }
+  function addBuilderWaypoint(lat, lon) {
+    builderWaypoints.push({ lat, lon });
+    const div = L.divIcon({ className: "", html: `<div class="builder-marker"></div>`, iconSize: [18, 18], iconAnchor: [9, 9] });
+    const m = L.marker([lat, lon], { icon: div }).addTo(builderMap);
+    builderMarkers.push(m);
+    builderTrack.setLatLngs(builderWaypoints.map((w) => [w.lat, w.lon]));
+    refreshBuilderUi();
+  }
+  function refreshBuilderUi() {
+    const stats = document.getElementById("builder-stats");
+    let km = 0;
+    for (let i = 1; i < builderWaypoints.length; i++) {
+      km += haversineKm(builderWaypoints[i - 1], builderWaypoints[i]);
+    }
+    const mi = km * 0.621371;
+    stats.textContent = `${builderWaypoints.length} waypoints · ${mi.toFixed(2)} mi`;
+  }
+  function wireRouteBuilder() {
+    document.getElementById("builder-close")?.addEventListener("click", closeRouteBuilder);
+    document.getElementById("builder-overlay")?.addEventListener("click", (e) => {
+      if (e.target.id === "builder-overlay") closeRouteBuilder();
+    });
+    document.getElementById("builder-undo")?.addEventListener("click", () => {
+      builderWaypoints.pop();
+      const m = builderMarkers.pop();
+      if (m && builderMap) builderMap.removeLayer(m);
+      builderTrack.setLatLngs(builderWaypoints.map((w) => [w.lat, w.lon]));
+      refreshBuilderUi();
+    });
+    document.getElementById("builder-clear")?.addEventListener("click", () => {
+      builderWaypoints = [];
+      builderMarkers.forEach((m) => builderMap.removeLayer(m));
+      builderMarkers = [];
+      builderTrack.setLatLngs([]);
+      refreshBuilderUi();
+    });
+    document.getElementById("builder-save")?.addEventListener("click", async () => {
+      if (builderWaypoints.length < 2) {
+        toast("Add at least 2 waypoints", "error");
+        return;
+      }
+      const name = (document.getElementById("builder-name").value || "").trim() || "Untitled route";
+      const kind = document.getElementById("builder-kind").value;
+      let km = 0;
+      for (let i = 1; i < builderWaypoints.length; i++) km += haversineKm(builderWaypoints[i - 1], builderWaypoints[i]);
+      const route = {
+        id: `mine_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        kind,
+        tags: ["mine"],
+        region: "Personal",
+        distance_km: Math.round(km * 100) / 100,
+        elevation_ft: 0,
+        summary: `Custom ${kind} route, ${km.toFixed(2)} km.`,
+        best_time: "Whenever",
+        start: { lat: builderWaypoints[0].lat, lon: builderWaypoints[0].lon },
+        waypoints: builderWaypoints,
+        color: "#ea580c",
+        personal: true,
+        createdAt: Date.now(),
+      };
+      personalRoutes.unshift(route);
+      await PaceDB.putMeta("personalRoutes", personalRoutes);
+      closeRouteBuilder();
+      renderRoutes();
+      toast(`Saved "${name}"`, "success");
+    });
   }
   function renderRoutes() {
     const container = document.getElementById("route-cards");
     container.innerHTML = "";
-    const list = routeFilter === "all" ? routes : routes.filter((r) => r.kind === routeFilter);
+    let list;
+    if (routeFilter === "all") {
+      list = [...personalRoutes, ...routes];
+    } else if (routeFilter === "mine") {
+      list = personalRoutes;
+    } else {
+      list = [...personalRoutes, ...routes].filter((r) => r.kind === routeFilter);
+    }
+    if (!list.length) {
+      container.innerHTML = `<div class="empty-state" style="padding:30px;"><div class="empty-icon">🗺️</div><div>${routeFilter === "mine" ? "No saved routes yet. Tap Create my own to make one." : "No routes match this filter."}</div></div>`;
+      return;
+    }
     list.forEach((r) => container.appendChild(routeCardEl(r)));
   }
 
@@ -346,6 +466,7 @@
 
   // ─── History view ───────────────────────────────────────────
   let historyFilter = "all";
+  let historySearchQuery = "";
   function wireHistory() {
     document.querySelectorAll("#history-filter .filter-chip").forEach((c) => {
       c.addEventListener("click", () => {
@@ -355,12 +476,25 @@
         renderHistory();
       });
     });
+    const search = document.getElementById("history-search");
+    if (search) {
+      search.addEventListener("input", debounce(() => {
+        historySearchQuery = search.value.trim().toLowerCase();
+        renderHistory();
+      }, 200));
+    }
   }
   function renderHistory() {
     const list = document.getElementById("history-list");
     const empty = document.getElementById("history-empty");
     list.innerHTML = "";
-    const filtered = historyFilter === "all" ? activities : activities.filter((a) => a.kind === historyFilter);
+    let filtered = historyFilter === "all" ? activities : activities.filter((a) => a.kind === historyFilter);
+    if (historySearchQuery) {
+      filtered = filtered.filter((a) => {
+        const hay = `${activityName(a)} ${a.notes || ""} ${(a.tags || []).join(" ")}`.toLowerCase();
+        return hay.includes(historySearchQuery);
+      });
+    }
     if (!filtered.length) {
       empty.style.display = "block";
       document.getElementById("history-stats").innerHTML = "";
@@ -422,6 +556,18 @@
       profile.name = e.target.value.trim();
       await PaceDB.putMeta("profile", profile);
     });
+    const wireField = (id, key, parseFn = parseFloat) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", debounce(async () => {
+        const v = parseFn(el.value);
+        profile[key] = isFinite(v) && v > 0 ? v : null;
+        await PaceDB.putMeta("profile", profile);
+      }, 300));
+    };
+    wireField("profile-weight-lbs", "weightLbs");
+    wireField("profile-height-in", "heightIn");
+    wireField("profile-age", "age", (v) => parseInt(v, 10));
     document.getElementById("export-btn").addEventListener("click", async () => {
       const data = await PaceDB.exportAll();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -470,6 +616,9 @@
   }
   function renderProfile() {
     document.getElementById("profile-name").value = profile.name || "";
+    document.getElementById("profile-weight-lbs").value = profile.weightLbs || "";
+    document.getElementById("profile-height-in").value = profile.heightIn || "";
+    document.getElementById("profile-age").value = profile.age || "";
     const totalKm = activities.reduce((s, a) => s + (a.distanceKm || 0), 0);
     const totalSec = activities.reduce((s, a) => s + (a.elapsedMs || 0), 0) / 1000;
     const totalElevFt = activities.reduce((s, a) => s + (a.elevationGainM || 0), 0) * 3.28084;
@@ -675,9 +824,25 @@
     // Attach context (route / coach)
     if (activityForCoach?.routeId) act.followingRouteId = activityForCoach.routeId;
     if (activityForCoach?.coachWorkoutId) act.coachWorkoutId = activityForCoach.coachWorkoutId;
+
+    // Compute estimated calories from MET × weight × hours
+    act.calories = estimateCalories(act);
+
+    // Ask the user how hard it felt — RPE 1-10. They can skip.
+    closeLive();
+    const rpe = await promptEffort();
+    if (rpe != null) act.rpe = rpe;
+
+    // Fetch a weather snapshot in the background (doesn't block save)
+    fetchWeatherFor(act).then(async (w) => {
+      if (w) {
+        act.weather = w;
+        await PaceDB.putActivity(act);
+      }
+    });
+
     await PaceDB.putActivity(act);
     activities = await PaceDB.allActivities();
-    closeLive();
     // Update PRs + check achievements
     const prUpdates = updatePRsFor(act);
     const newlyUnlocked = checkAchievements({ ratingsGiven: Object.keys(routeRatings).length, prsBroken: prUpdates });
@@ -685,6 +850,92 @@
     speakAndToast(`${kindLabel(act.kind)} saved · ${formatDistance(act.distanceKm)} · ${formatDuration(act.elapsedMs / 1000)}`, "success");
     newlyUnlocked.forEach((d) => speakAndToast(`Unlocked: ${d.icon} ${d.name}`, "achievement"));
     setTimeout(() => openActivityDetail(act.id), 600);
+  }
+
+  // ─── Effort prompt (RPE 1-10) ────────────────────────────────
+  function promptEffort() {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById("effort-overlay");
+      const grid = document.getElementById("effort-grid");
+      const skip = document.getElementById("effort-skip");
+      const save = document.getElementById("effort-save");
+      const hint = document.getElementById("effort-hint");
+      let chosen = null;
+      const labels = { 1: "Very easy", 2: "Easy", 3: "Moderate", 4: "Somewhat hard", 5: "Hard", 6: "Hard+", 7: "Very hard", 8: "Very hard+", 9: "Extreme", 10: "Max effort" };
+      grid.innerHTML = "";
+      for (let i = 1; i <= 10; i++) {
+        const cell = document.createElement("button");
+        cell.className = "effort-cell";
+        cell.dataset.rpe = i;
+        cell.textContent = i;
+        cell.addEventListener("click", () => {
+          chosen = i;
+          grid.querySelectorAll(".effort-cell").forEach((c) => c.classList.toggle("selected", c.dataset.rpe == i));
+          hint.textContent = labels[i];
+          save.style.display = "inline-block";
+        });
+        grid.appendChild(cell);
+      }
+      const cleanup = () => {
+        overlay.classList.remove("open");
+        overlay.setAttribute("aria-hidden", "true");
+        skip.removeEventListener("click", onSkip);
+        save.removeEventListener("click", onSave);
+      };
+      const onSkip = () => { cleanup(); resolve(null); };
+      const onSave = () => { cleanup(); resolve(chosen); };
+      skip.addEventListener("click", onSkip);
+      save.addEventListener("click", onSave);
+      save.style.display = "none";
+      hint.textContent = "Tap a number — or skip.";
+      overlay.classList.add("open");
+      overlay.setAttribute("aria-hidden", "false");
+    });
+  }
+
+  // ─── Calorie estimate (Compendium-of-Physical-Activities MET formula) ──
+  function estimateCalories(act) {
+    if (!profile.weightLbs) return null;
+    const kg = profile.weightLbs / 2.2046;
+    const hours = (act.elapsedMs || 0) / 3600000;
+    if (hours <= 0) return null;
+    const speedMph = (act.distanceKm * 0.621371) / hours;
+    const met = kindMET(act.kind, speedMph);
+    return Math.round(met * kg * hours);
+  }
+
+  // ─── Weather snapshot via open-meteo (free, no API key) ────────
+  async function fetchWeatherFor(act) {
+    if (!act.points || !act.points.length) return null;
+    const start = act.points[0];
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${start.lat.toFixed(3)}&longitude=${start.lon.toFixed(3)}&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const j = await res.json();
+      const c = j.current || {};
+      return {
+        tempF: c.temperature_2m,
+        windMph: c.wind_speed_10m,
+        weatherCode: c.weather_code,
+        capturedAt: Date.now(),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function weatherEmoji(code) {
+    if (code == null) return "";
+    if (code === 0) return "☀️";
+    if (code <= 3) return "⛅";
+    if (code <= 48) return "🌫️";
+    if (code <= 57) return "🌦️";
+    if (code <= 67) return "🌧️";
+    if (code <= 77) return "❄️";
+    if (code <= 82) return "🌧️";
+    if (code <= 86) return "🌨️";
+    return "⛈️";
   }
 
   function cancelLive() {
@@ -839,6 +1090,11 @@
     document.getElementById("detail-delete").style.display = "";
     const elev = (a.elevationGainM || 0) * 3.28084;
     const speedMph = (a.distanceKm / Math.max(0.001, a.elapsedMs / 3600000)) * 0.621371;
+    const caloriesTxt = a.calories ? `${a.calories}` : "—";
+    const rpeTxt = a.rpe ? `${a.rpe}/10` : "—";
+    const weatherTxt = a.weather && a.weather.tempF != null
+      ? `${weatherEmoji(a.weather.weatherCode)} ${Math.round(a.weather.tempF)}°F · ${Math.round(a.weather.windMph)} mph wind`
+      : "—";
     const photosHtml = (a.photos || []).map((p, i) =>
       `<img class="detail-photo" data-photo-idx="${i}" src="${p}" alt="" />`
     ).join("");
@@ -855,6 +1111,9 @@
         <div class="detail-stat"><div class="detail-stat-label">Time</div><div class="detail-stat-val">${formatDuration(a.elapsedMs / 1000)}</div></div>
         <div class="detail-stat"><div class="detail-stat-label">${a.kind === "drive" ? "Avg speed" : "Pace"}</div><div class="detail-stat-val">${a.kind === "drive" ? speedMph.toFixed(1) + " mph" : formatPace(a)}</div></div>
         <div class="detail-stat"><div class="detail-stat-label">Elevation</div><div class="detail-stat-val">${Math.round(elev)} ft</div></div>
+        <div class="detail-stat"><div class="detail-stat-label">Calories</div><div class="detail-stat-val">${caloriesTxt}</div></div>
+        <div class="detail-stat"><div class="detail-stat-label">Effort</div><div class="detail-stat-val">${rpeTxt}</div></div>
+        <div class="detail-stat" style="grid-column:span 2;"><div class="detail-stat-label">Weather at start</div><div class="detail-stat-val" style="font-size:14px;">${weatherTxt}</div></div>
       </div>
       <div class="detail-section"><h4>Notes</h4>
         <textarea class="detail-notes" id="detail-notes" placeholder="How did it feel?">${escapeHtml(a.notes || "")}</textarea>
@@ -1239,9 +1498,50 @@
     return "Evening";
   }
 
-  function kindIcon(k) { return ({ run: "🏃", drive: "🏎️", bike: "🚴", walk: "🚶" }[k] || "▶"); }
-  function kindColor(k) { return getComputedStyle(document.documentElement).getPropertyValue("--" + k).trim() || "#f97316"; }
-  function kindLabel(k) { return ({ run: "Run", drive: "Drive", bike: "Bike", walk: "Walk" }[k] || k); }
+  function kindIcon(k) {
+    return ({
+      run: "🏃", drive: "🏎️", bike: "🚴", walk: "🚶",
+      hike: "🥾", swim: "🏊", strength: "🏋️", yoga: "🧘",
+    }[k] || "▶");
+  }
+  function kindColor(k) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue("--" + k).trim();
+    return v || "#ea580c";
+  }
+  function kindLabel(k) {
+    return ({
+      run: "Run", drive: "Drive", bike: "Bike", walk: "Walk",
+      hike: "Hike", swim: "Swim", strength: "Strength", yoga: "Yoga",
+    }[k] || k);
+  }
+  // Whether a kind needs GPS tracking. Indoor activities (yoga, strength,
+  // swim) just track elapsed time + manual notes — no map.
+  function kindNeedsGps(k) {
+    return ["run", "drive", "bike", "walk", "hike"].includes(k);
+  }
+  // MET (Metabolic Equivalent of Task) for calorie calc — kcal ≈ MET × kg × hours
+  function kindMET(k, speedMph = null) {
+    if (k === "run") {
+      // Approximate: 9 mph ~13 MET, 6 mph ~10, 4 mph ~6
+      if (speedMph >= 8) return 12;
+      if (speedMph >= 6) return 10;
+      if (speedMph >= 4) return 7;
+      return 6;
+    }
+    if (k === "bike") {
+      if (speedMph >= 16) return 10;
+      if (speedMph >= 12) return 8;
+      if (speedMph >= 10) return 6;
+      return 4;
+    }
+    if (k === "swim") return 7;
+    if (k === "hike") return 6;
+    if (k === "walk") return 3.5;
+    if (k === "strength") return 5;
+    if (k === "yoga") return 3;
+    if (k === "drive") return 1.5;
+    return 4;
+  }
 
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

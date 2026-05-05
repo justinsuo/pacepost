@@ -1,0 +1,101 @@
+# Builds the iOS native shell on a GitHub-hosted macOS runner.
+#
+# Trigger: manual ("workflow_dispatch") so you don't burn macOS minutes on
+# every commit. Run from the Actions tab once you're ready to produce a build.
+#
+# What it does:
+#   1. Checks out the repo on macOS.
+#   2. Installs Capacitor + adds the iOS platform (creates ios/ folder).
+#   3. Builds an unsigned .app bundle for the Simulator (free, no Apple ID).
+#   4. Uploads the build as a workflow artifact you can download + install
+#      via Xcode → Devices & Simulators on a Mac.
+#
+# Once you're a paid Apple Developer Program member, switch this to a signed
+# archive that uploads directly to App Store Connect / TestFlight. Stub at
+# the bottom of this file shows what to add.
+
+name: Build iOS app
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install JS deps
+        run: npm install --no-audit --no-fund
+
+      - name: Add iOS platform
+        run: |
+          npx cap add ios || echo "ios already added"
+          npx cap sync ios
+
+      - name: Build for Simulator (unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload .app bundle as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacepost-ios-simulator
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 14
+
+# ─── Signed App Store path (uncomment + fill in once you join Apple Developer Program) ───
+#
+# Requires the following GitHub repository secrets:
+#   APPLE_TEAM_ID — your 10-char team ID
+#   APPLE_CERT_P12_BASE64 — base64-encoded distribution .p12
+#   APPLE_CERT_PASSWORD — password for the .p12
+#   APPSTORE_CONNECT_API_KEY_BASE64 — base64-encoded App Store Connect API key
+#   APPSTORE_CONNECT_KEY_ID
+#   APPSTORE_CONNECT_ISSUER_ID
+#
+# Replace the "Build for Simulator" step above with:
+#
+#   - name: Import signing cert
+#     run: |
+#       echo "$APPLE_CERT_P12_BASE64" | base64 -d > /tmp/dist.p12
+#       security create-keychain -p "" build.keychain
+#       security import /tmp/dist.p12 -k build.keychain -P "$APPLE_CERT_PASSWORD" -T /usr/bin/codesign
+#       security list-keychains -s build.keychain
+#       security default-keychain -s build.keychain
+#       security unlock-keychain -p "" build.keychain
+#       security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+#
+#   - name: Archive + export
+#     working-directory: ios/App
+#     run: |
+#       xcodebuild -workspace App.xcworkspace -scheme App \
+#         -configuration Release -sdk iphoneos \
+#         -archivePath build/App.xcarchive archive \
+#         DEVELOPMENT_TEAM=$APPLE_TEAM_ID
+#       xcodebuild -exportArchive -archivePath build/App.xcarchive \
+#         -exportOptionsPlist ../ExportOptions.plist \
+#         -exportPath build/ipa
+#
+#   - name: Upload to TestFlight
+#     run: |
+#       echo "$APPSTORE_CONNECT_API_KEY_BASE64" | base64 -d > /tmp/AuthKey.p8
+#       xcrun altool --upload-app -f ios/App/build/ipa/App.ipa -t ios \
+#         --apiKey $APPSTORE_CONNECT_KEY_ID --apiIssuer $APPSTORE_CONNECT_ISSUER_ID
