@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>pacepost</title>
   <meta name="description" content="Track runs, drives, and rides. Coached workouts, achievements, streaks." />
-  <meta name="theme-color" content="#0b1015" />
+  <meta name="theme-color" content="#ffffff" />
 
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E" />
@@ -130,6 +130,14 @@
         <h2 class="section-title">Heatmap</h2>
       </div>
       <div id="heatmap" style="height:280px;border-radius:12px;overflow:hidden;border:1px solid var(--border);"></div>
+      <div id="install-section" class="install-section" style="display:none;">
+        <h3>📲 Install pacepost as an app</h3>
+        <p id="install-blurb">Get an icon on your home screen, full-screen experience, no browser bars.</p>
+        <div class="install-buttons">
+          <button class="btn-ghost primary" id="install-btn" style="display:none;">Install now</button>
+        </div>
+        <ol id="install-instructions"></ol>
+      </div>
       <div class="profile-footer">
         <button class="btn-ghost" id="export-btn">Export data (.json)</button>
         <button class="btn-ghost" id="import-btn">Import data</button>

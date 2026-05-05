@@ -61,6 +61,7 @@
     wireProfile();
     wireLiveControls();
     wireDetailModal();
+    wireInstallApp();
 
     renderAll();
 
@@ -332,7 +333,7 @@
     overlay.setAttribute("aria-hidden", "false");
     setTimeout(() => {
       const m = L.map("route-detail-map", { zoomControl: true, attributionControl: true });
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, attribution: "© OSM · CARTO" }).addTo(m);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, attribution: "© OSM · CARTO" }).addTo(m);
       const ll = [r.start.lat, r.start.lon];
       m.setView(ll, 13);
       L.marker(ll).addTo(m).bindPopup(escapeHtml(r.name)).openPopup();
@@ -553,7 +554,7 @@
     const el = document.getElementById("heatmap");
     el.innerHTML = "";
     const m = L.map(el, { zoomControl: false, attributionControl: false });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 17 }).addTo(m);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 17 }).addTo(m);
     const allPts = [];
     activities.forEach((a) => {
       (a.points || []).forEach((p) => allPts.push([p.lat, p.lon, 0.6]));
@@ -620,7 +621,7 @@
       liveMap = null;
     }
     liveMap = L.map("live-map", { zoomControl: false, attributionControl: false }).setView([37.8, -122.2], 13);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(liveMap);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(liveMap);
     liveTrack = L.polyline([], { color: kindColor(tracker.kind), weight: 5, opacity: 0.95, lineJoin: "round", lineCap: "round" }).addTo(liveMap);
   }
 
@@ -919,7 +920,7 @@
 
   function initDetailMap(a) {
     detailMap = L.map("detail-map", { attributionControl: false }).setView([37.8, -122.2], 13);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(detailMap);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(detailMap);
     if (a.points && a.points.length > 1) {
       const latlngs = a.points.map((p) => [p.lat, p.lon]);
       const trail = L.polyline(latlngs, { color: kindColor(a.kind), weight: 5, opacity: 0.95 }).addTo(detailMap);
@@ -949,6 +950,91 @@
         <span>${formatDuration(s.dtMs / 1000)} <span style="color:var(--text-dim);font-size:11px;">(${formatPaceSecPerMi(s.paceSecPerKm * 1.609)})</span></span>
       </div>`
     ).join("");
+  }
+
+  // ─── Install-as-app prompt + per-platform instructions ─────
+  // Strategy:
+  //   1. Hide the section if the page is already running standalone.
+  //   2. On Chrome / Edge / Android: catch beforeinstallprompt, show a
+  //      single "Install now" button that fires the native prompt.
+  //   3. On iOS Safari: show step-by-step Add-to-Home-Screen instructions
+  //      since iOS does not expose beforeinstallprompt.
+  //   4. Fallback: show generic instructions.
+  let deferredInstallPrompt = null;
+  function wireInstallApp() {
+    const section = document.getElementById("install-section");
+    const btn = document.getElementById("install-btn");
+    const blurb = document.getElementById("install-blurb");
+    const list = document.getElementById("install-instructions");
+    if (!section || !btn || !list) return;
+
+    // If already installed (display-mode: standalone), bail out
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+                         window.navigator.standalone === true;
+    if (isStandalone) return;
+
+    section.style.display = "block";
+
+    const ua = navigator.userAgent || "";
+    const isIos = /iPhone|iPad|iPod/i.test(ua);
+    const isAndroid = /Android/i.test(ua);
+    const isFirefox = /Firefox\//i.test(ua);
+
+    if (isIos) {
+      blurb.textContent = "On iPhone / iPad you add it from Safari's share sheet:";
+      list.innerHTML = `
+        <li>Tap the <strong>Share</strong> button (the box with the up-arrow at the bottom of Safari).</li>
+        <li>Scroll down and pick <strong>Add to Home Screen</strong>.</li>
+        <li>Tap <strong>Add</strong> in the top right. Done — pacepost now lives on your home screen.</li>
+      `;
+      return;
+    }
+
+    if (isFirefox) {
+      blurb.textContent = "Firefox doesn't yet support web-app install. Use Chrome, Edge, or Safari.";
+      list.innerHTML = "";
+      return;
+    }
+
+    // Chrome / Edge / Android Chrome: listen for the install event
+    list.innerHTML = `
+      <li>Tap <strong>Install now</strong> below — your browser will pop a confirm dialog.</li>
+      <li>If no button appears, open the browser menu (⋮) and pick <strong>Install app</strong> or <strong>Add to home screen</strong>.</li>
+    `;
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      btn.style.display = "inline-block";
+    });
+    btn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) {
+        // Maybe already installed or browser dropped the event — show fallback
+        toast("If your browser doesn't pop a dialog, use the menu → Install app", "");
+        return;
+      }
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === "accepted") {
+        toast("Installed!", "success");
+        section.style.display = "none";
+      }
+      deferredInstallPrompt = null;
+      btn.style.display = "none";
+    });
+    window.addEventListener("appinstalled", () => {
+      toast("pacepost is installed 🎉", "success");
+      section.style.display = "none";
+    });
+
+    // Some Android browsers fire beforeinstallprompt right away; if it never
+    // arrives within 1.5s assume the user is on an unsupported browser and
+    // leave only the manual instructions.
+    setTimeout(() => {
+      if (!deferredInstallPrompt && !isStandalone) {
+        // Button stays hidden — only the manual steps show.
+      }
+    }, 1500);
   }
 
   // ─── Achievements engine ───────────────────────────────────
