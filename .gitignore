@@ -15,6 +15,20 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Node test deps if I add any later
+# Node deps + lockfile
 node_modules/
 package-lock.json
+
+# iOS build artifacts
+ios/App/Pods/
+ios/App/build/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcworkspace/xcshareddata/swiftpm/
+
+# Local Firebase config with real keys
+firebase-config.local.js
+
+# Misc derived
+*.xcuserstate

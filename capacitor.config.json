@@ -1,8 +1,7 @@
 {
   "appId": "com.justinsuo.pacepost",
   "appName": "pacepost",
-  "webDir": ".",
-  "bundledWebRuntime": false,
+  "webDir": "www",
   "ios": {
     "contentInset": "automatic",
     "scrollEnabled": true,

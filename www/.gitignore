@@ -1,0 +1,20 @@
+# Local Claude Code settings + memory
+.claude/
+
+# Local Windows helpers
+*.bat
+
+# Local screenshots / scratch
+*.local.png
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor scratch
+.vscode/
+.idea/
+
+# Node test deps if I add any later
+node_modules/
+package-lock.json
